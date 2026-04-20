@@ -2,9 +2,9 @@
 ## Astral Projection - UDRL
 
 
-Astral Projection is a Cobalt Strike UDRL (User-Defined Reflective Loader), that preforms advanced module stomping.
+Astral Projection is a Cobalt Strike UDRL (User-Defined Reflective Loader), that performs advanced module stomping.
 
-The UDRL loads a module using `LoadLibraryExW` and stomps it. During sleep it unmaps the module while keeping PEB entries intact, then remaps a fresh module to avoid any IOCs while sleeping. 
+The UDRL loads a module using `LoadLibraryExW`, then manipulates its internals by setting VEH to intercept strategic calls that allow it to steal the section handle of the sacrificial DLL and upgrade its access rights for later use in the sleep mask. During sleep it unmaps the module while keeping PEB entries intact, then remaps a fresh module to avoid any IOCs while sleeping. 
 
 This project is built with [Crystal Palace](https://tradecraftgarden.org/crystalpalace.html). Some of the code was adopted from the [Crystal-Kit](https://github.com/rasta-mouse/Crystal-Kit) project.
 
