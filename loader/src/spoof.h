@@ -4,7 +4,7 @@ typedef struct {
     PVOID     ptr;
     DWORD     ssn;
     int       argc;
-    ULONG_PTR args[10];
+    ULONG_PTR args[12];
 } FUNCTION_CALL;
 
 ULONG_PTR spoof_call ( FUNCTION_CALL * call );

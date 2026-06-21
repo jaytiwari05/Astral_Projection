@@ -86,6 +86,7 @@ DECLSPEC_IMPORT int __cdecl MSVCRT$printf(const char* format, ...);
 
 pSacData g_SacData;
 
+__attribute__((optimize("O0")))
 LONG VectoredHandleree(PEXCEPTION_POINTERS ExceptionInfo) {
     if (ExceptionInfo->ExceptionRecord->ExceptionCode == EXCEPTION_SINGLE_STEP) {
 
